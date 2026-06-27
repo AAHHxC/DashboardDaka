@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dashboard Cartera — DAKA | Jun 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3250;
+    --text:#e8eaf0; --muted:#8891b4;
+    --green:#22c55e; --green-bg:rgba(34,197,94,0.1);
+    --yellow:#eab308; --yellow-bg:rgba(234,179,8,0.1);
+    --red:#ef4444; --red-bg:rgba(239,68,68,0.1);
+    --blue:#3b82f6; --blue-bg:rgba(59,130,246,0.1);
+    --accent:#6366f1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;-webkit-text-size-adjust:100%;}
+
+  /* HEADER */
+  .header{background:linear-gradient(135deg,#1a1d27 0%,#22263a 100%);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .header-left h1{font-size:17px;font-weight:700;letter-spacing:-0.3px;line-height:1.3;}
+  .header-left span{font-size:12px;color:var(--muted);margin-top:3px;display:block;}
+  .header-badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid;white-space:nowrap;}
+  .badge-base{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);}
+  .badge-mid{background:rgba(168,85,247,0.1);border-color:#a855f7;color:#a855f7;}
+  .badge-current{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* ALERT */
+  .alert-bar{background:rgba(239,68,68,0.08);border-bottom:1px solid rgba(239,68,68,0.25);padding:10px 16px;display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.5;flex-wrap:wrap;}
+  .alert-bar .icon{color:var(--red);font-size:16px;flex-shrink:0;margin-top:1px;}
+  .alert-bar strong{color:var(--red);}
+
+  /* MAIN */
+  .main{padding:14px;}
+
+  /* NOTE */
+  .note-box{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+  .note-box strong{color:var(--blue);}
+
+  /* KPI */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px;margin-bottom:16px;}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 14px;position:relative;overflow:hidden;}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;}
+  .kpi-card.green::before{background:var(--green);}
+  .kpi-card.yellow::before{background:var(--yellow);}
+  .kpi-card.red::before{background:var(--red);}
+  .kpi-card.blue::before{background:var(--blue);}
+  .kpi-card.neutral::before{background:var(--muted);}
+  .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px;}
+  .kpi-value{font-size:26px;font-weight:700;line-height:1;}
+  .kpi-row{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+  .kpi-chip{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;white-space:nowrap;}
+  .chip-base{background:rgba(59,130,246,0.12);color:var(--blue);}
+  .chip-mid{background:rgba(168,85,247,0.12);color:#a855f7;}
+  .chip-up-bad{background:var(--red-bg);color:var(--red);}
+  .chip-up-good{background:var(--green-bg);color:var(--green);}
+  .chip-neutral{background:rgba(139,148,180,0.1);color:var(--muted);}
+
+  /* SECTION */
+  .section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+
+  /* CHARTS */
+  .charts-row{display:grid;gap:12px;margin-bottom:14px;}
+  .charts-row-2{grid-template-columns:1fr 1fr;}
+  .charts-row-3{grid-template-columns:1fr 1fr 1fr;}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .chart-card h3{font-size:12px;font-weight:600;margin-bottom:12px;line-height:1.3;}
+  .chart-wrap{position:relative;}
+
+  /* TABLES */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:6px;}
+  .store-table{width:100%;border-collapse:collapse;min-width:680px;}
+  .store-table th{text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;padding:7px 9px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .store-table th.right{text-align:right;}
+  .store-table td{padding:8px 9px;border-bottom:1px solid rgba(46,50,80,0.5);font-size:12px;white-space:nowrap;}
+  .store-table td.right{text-align:right;font-family:'Courier New',monospace;font-size:11px;}
+  .store-table tr:hover td{background:var(--surface2);}
+  .store-table tr:last-child td{border-bottom:none;}
+
+  /* PILLS */
+  .pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;}
+  .pill-red{background:var(--red-bg);color:var(--red);}
+  .pill-yellow{background:var(--yellow-bg);color:var(--yellow);}
+  .pill-green{background:var(--green-bg);color:var(--green);}
+  .pill-muted{background:rgba(139,148,180,0.1);color:var(--muted);}
+  .rank-num{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--surface2);color:var(--muted);font-size:10px;text-align:center;line-height:20px;margin-right:6px;}
+  .delta-cell{font-size:11px;font-weight:600;}
+  .delta-cell.up{color:var(--red);}
+  .delta-cell.down{color:var(--green);}
+  .delta-cell.zero{color:var(--muted);}
+  .mini-bar-wrap{display:flex;align-items:center;gap:6px;}
+  .mini-bar-track{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:40px;}
+  .mini-bar-fill{height:100%;border-radius:3px;}
+
+  .footer{text-align:center;padding:16px 14px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);line-height:1.6;}
+
+  /* ── TABLET ── */
+  @media(max-width:900px){
+    .charts-row-3{grid-template-columns:1fr 1fr;}
+  }
+  /* ── MÓVIL ── */
+  @media(max-width:600px){
+    .header{padding:12px;}
+    .header-left h1{font-size:15px;}
+    .header-badges{width:100%;}
+    .alert-bar{padding:8px 12px;font-size:11px;}
+    .main{padding:10px;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .kpi-card{padding:11px;}
+    .kpi-value{font-size:20px!important;}
+    .kpi-label{font-size:9px;}
+    .kpi-chip{font-size:9px;}
+    .charts-row-2,.charts-row-3{grid-template-columns:1fr;}
+    .chart-card{padding:12px;}
+    .chart-wrap{height:190px!important;}
+    .hide-mobile{display:none!important;}
+    .section-title{font-size:11px;}
+    .footer{font-size:10px;padding:12px 10px;}
+  }
+  @media(max-width:380px){
+    .kpi-value{font-size:18px!important;}
+    .header-left h1{font-size:13px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>📊 Dashboard Ejecutivo de Cartera — DAKA</h1>
+    <span>Evolución diaria de morosidad · Junio 2026</span>
+  </div>
+  <div class="header-badges">
+    <div class="badge badge-base">⚑ Base: 24 Jun</div>
+    <div class="badge badge-mid">◑ 26 Jun</div>
+    <div class="badge badge-current">● Hoy: 27 Jun</div>
+  </div>
+</div>
+
+<div class="alert-bar">
+  <span class="icon">⚠</span>
+  <strong>Tendencia crítica (3 días):</strong>&nbsp;
+  Mora por clientes: 6.56% → 9.14% → <strong>9.95%</strong> — se acerca al umbral del 10%.&nbsp;
+  Saldo vencido acumula <strong>+$13,044 (+46.8%)</strong> desde el día base.&nbsp;
+  <strong>Bello Monte</strong> ya supera el 16% de mora. Penalidades: <strong>$6,096</strong> acumuladas (+$388 vs. ayer).
+</div>
+
+<div class="main">
+
+  <div class="note-box">
+    <strong>Metodología:</strong> Línea base fija en 24 Jun. Penalidades = USD $4 × cuotas vencidas (campo AW). Saldo vigente = Cartera − Vencido. Tiendas Porlamar, Barquisimeto, Lechería y Valera mantienen 0% mora (cartera reciente). Los deltas "vs ayer" comparan 27 Jun con 26 Jun; los deltas "vs base" comparan con 24 Jun.
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-title">KPIs principales — 27 Jun 2026</div>
+  <div class="kpi-grid">
+
+    <div class="kpi-card blue">
+      <div class="kpi-label">Total órdenes</div>
+      <div class="kpi-value">12,659</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-good">▲ +185 vs ayer</span>
+        <span class="kpi-chip chip-base">▲ +614 vs base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card neutral">
+      <div class="kpi-label">Clientes únicos</div>
+      <div class="kpi-value">11,821</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-good">▲ +169 vs ayer</span>
+        <span class="kpi-chip chip-base">▲ +556 vs base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card green">
+      <div class="kpi-label">Al corriente</div>
+      <div class="kpi-value">11,301</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-good">▲ +106 vs ayer</span>
+        <span class="kpi-chip chip-base">▲ +225 vs base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card red">
+      <div class="kpi-label">Clientes en mora</div>
+      <div class="kpi-value" style="color:var(--red)">1,259</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +119 vs ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +469 vs base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card red">
+      <div class="kpi-label">Mora / clientes</div>
+      <div class="kpi-value" style="color:var(--red)">9.95%</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +0.81 pp ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +3.39 pp base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Mora / saldo</div>
+      <div class="kpi-value" style="color:var(--yellow)">3.67%</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +0.23 pp ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +1.08 pp base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card blue">
+      <div class="kpi-label">Cartera total ($)</div>
+      <div class="kpi-value" style="font-size:20px">$1,115,255</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-good">▲ +$6,935 ayer</span>
+        <span class="kpi-chip chip-base">▲ +$38,349 base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card green">
+      <div class="kpi-label">Saldo vigente ($)</div>
+      <div class="kpi-value" style="font-size:20px">$1,074,331</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-good">▲ +$4,170 ayer</span>
+        <span class="kpi-chip chip-base">▲ +$25,305 base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card red">
+      <div class="kpi-label">Saldo vencido ($)</div>
+      <div class="kpi-value" style="font-size:20px;color:var(--red)">$40,924</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +$2,765 ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +$13,044 base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Penalidades acum. ($)</div>
+      <div class="kpi-value" style="font-size:20px;color:var(--yellow)">$6,096</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +$388 ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +$1,816 base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card yellow">
+      <div class="kpi-label">1 cuota vencida</div>
+      <div class="kpi-value">1,213</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +63 vs ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +332 vs base</span>
+      </div>
+    </div>
+
+    <div class="kpi-card red">
+      <div class="kpi-label">2+ cuotas vencidas</div>
+      <div class="kpi-value" style="color:var(--red)">145</div>
+      <div class="kpi-row">
+        <span class="kpi-chip chip-up-bad">▲ +16 vs ayer</span>
+        <span class="kpi-chip chip-up-bad">▲ +57 vs base</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHARTS ROW 1: AW + Buckets -->
+  <div class="charts-row charts-row-2">
+    <div class="chart-card">
+      <h3>Distribución por cuotas vencidas — evolución 3 días</h3>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartAW"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Distribución por bucket de días de atraso</h3>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartBucket"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2: Tasas + Saldo + Penalidades -->
+  <div class="charts-row charts-row-3">
+    <div class="chart-card">
+      <h3>Evolución tasa de morosidad (%)</h3>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartTasa"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Saldo vencido vs. vigente ($)</h3>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartSaldo"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Penalidades acumuladas ($4 × cuotas venc.)</h3>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartPenal"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 3: Tiendas -->
+  <div class="section-title">Morosidad por tienda — Ranking de deterioro</div>
+  <div class="charts-row charts-row-2">
+    <div class="chart-card">
+      <h3>Vencido por tienda ($) — evolución 3 días</h3>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartStoreMora"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>% Morosidad por tienda — evolución 3 días</h3>
+      <div class="chart-wrap" style="height:220px"><canvas id="chartStorePct"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLA TIENDAS -->
+  <div class="chart-card" style="margin-bottom:16px">
+    <h3 style="margin-bottom:12px">Detalle por tienda — 27 Jun 2026</h3>
+    <div class="table-scroll">
+    <table class="store-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tienda</th>
+          <th class="right hide-mobile">Órdenes</th>
+          <th class="right hide-mobile">Cartera ($)</th>
+          <th class="right">Mora</th>
+          <th class="right hide-mobile">Vencido ($)</th>
+          <th class="right hide-mobile">24 Jun %</th>
+          <th class="right hide-mobile">26 Jun %</th>
+          <th class="right">27 Jun %</th>
+          <th class="right">Δ ayer</th>
+          <th>Riesgo</th>
+        </tr>
+      </thead>
+      <tbody id="storeTableBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- TABLA RESUMEN -->
+  <div class="section-title">Tabla resumen — Evolución 24 → 26 → 27 Jun</div>
+  <div class="chart-card" style="margin-bottom:16px">
+    <div class="table-scroll">
+    <table class="store-table" style="min-width:560px">
+      <thead>
+        <tr>
+          <th>Indicador</th>
+          <th class="right">24 Jun (Base)</th>
+          <th class="right hide-mobile">26 Jun</th>
+          <th class="right">27 Jun (Hoy)</th>
+          <th class="right">Δ vs ayer</th>
+          <th class="right hide-mobile">Δ vs base</th>
+          <th class="hide-mobile">Tendencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Total órdenes</td><td class="right">12,045</td><td class="right hide-mobile">12,474</td><td class="right">12,659</td><td class="right"><span class="delta-cell up">+185</span></td><td class="right hide-mobile"><span class="delta-cell up">+614</span></td><td class="hide-mobile"><span class="pill pill-green">▲ Crecimiento</span></td></tr>
+        <tr><td>Clientes únicos</td><td class="right">11,265</td><td class="right hide-mobile">11,652</td><td class="right">11,821</td><td class="right"><span class="delta-cell up">+169</span></td><td class="right hide-mobile"><span class="delta-cell up">+556</span></td><td class="hide-mobile"><span class="pill pill-green">▲ Crecimiento</span></td></tr>
+        <tr><td>Al corriente (0 CV)</td><td class="right">11,076</td><td class="right hide-mobile">11,195</td><td class="right">11,301</td><td class="right"><span class="delta-cell up">+106</span></td><td class="right hide-mobile"><span class="delta-cell up">+225</span></td><td class="hide-mobile"><span class="pill pill-green">▲ Estable</span></td></tr>
+        <tr><td>Con 1 cuota vencida</td><td class="right">881</td><td class="right hide-mobile">1,150</td><td class="right">1,213</td><td class="right"><span class="delta-cell up">+63</span></td><td class="right hide-mobile"><span class="delta-cell up">+332</span></td><td class="hide-mobile"><span class="pill pill-yellow">⚠ Deterioro</span></td></tr>
+        <tr><td>Con 2 cuotas vencidas</td><td class="right">75</td><td class="right hide-mobile">110</td><td class="right">124</td><td class="right"><span class="delta-cell up">+14</span></td><td class="right hide-mobile"><span class="delta-cell up">+49</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+        <tr><td>Con 3 cuotas vencidas</td><td class="right">13</td><td class="right hide-mobile">19</td><td class="right">21</td><td class="right"><span class="delta-cell up">+2</span></td><td class="right hide-mobile"><span class="delta-cell up">+8</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+        <tr><td>Bucket 1–29 días</td><td class="right">777</td><td class="right hide-mobile">1,121</td><td class="right">1,238</td><td class="right"><span class="delta-cell up">+117</span></td><td class="right hide-mobile"><span class="delta-cell up">+461</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+        <tr><td>Bucket 30–59 días</td><td class="right">13</td><td class="right hide-mobile">19</td><td class="right">21</td><td class="right"><span class="delta-cell up">+2</span></td><td class="right hide-mobile"><span class="delta-cell up">+8</span></td><td class="hide-mobile"><span class="pill pill-yellow">⚠ Vigilar</span></td></tr>
+        <tr><td>Cartera total ($)</td><td class="right">$1,076,906</td><td class="right hide-mobile">$1,108,320</td><td class="right">$1,115,255</td><td class="right"><span class="delta-cell up">+$6,935</span></td><td class="right hide-mobile"><span class="delta-cell up">+$38,349</span></td><td class="hide-mobile"><span class="pill pill-green">▲ Crecimiento</span></td></tr>
+        <tr><td>Saldo vigente ($)</td><td class="right">$1,049,026</td><td class="right hide-mobile">$1,070,161</td><td class="right">$1,074,331</td><td class="right"><span class="delta-cell up">+$4,170</span></td><td class="right hide-mobile"><span class="delta-cell up">+$25,305</span></td><td class="hide-mobile"><span class="pill pill-green">▲ Estable</span></td></tr>
+        <tr><td>Saldo vencido ($)</td><td class="right">$27,880</td><td class="right hide-mobile">$38,159</td><td class="right">$40,924</td><td class="right"><span class="delta-cell up">+$2,765</span></td><td class="right hide-mobile"><span class="delta-cell up">+$13,044</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+        <tr><td>Tasa mora / saldo</td><td class="right">2.59%</td><td class="right hide-mobile">3.44%</td><td class="right">3.67%</td><td class="right"><span class="delta-cell up">+0.23 pp</span></td><td class="right hide-mobile"><span class="delta-cell up">+1.08 pp</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+        <tr><td>Tasa mora / clientes</td><td class="right">6.56%</td><td class="right hide-mobile">9.14%</td><td class="right">9.95%</td><td class="right"><span class="delta-cell up">+0.81 pp</span></td><td class="right hide-mobile"><span class="delta-cell up">+3.39 pp</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+        <tr><td>Penalidades acum. ($)</td><td class="right">$4,280</td><td class="right hide-mobile">$5,708</td><td class="right">$6,096</td><td class="right"><span class="delta-cell up">+$388</span></td><td class="right hide-mobile"><span class="delta-cell up">+$1,816</span></td><td class="hide-mobile"><span class="pill pill-red">⛔ Crítico</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:10px;color:var(--muted);margin-top:8px">Penalidades = $4 USD × total de cuotas vencidas en cartera. Tasa diaria promedio desde base: ($6,096−$4,280)÷3 = $605/día.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  Dashboard generado por Claude · Proyecto Umbrella &nbsp;|&nbsp; Bancaribe &nbsp;|&nbsp; Cortes: 24 Jun (n=12,045) · 26 Jun (n=12,474) · 27 Jun (n=12,659)
+</div>
+
+<script>
+const DATES = ['24 Jun', '26 Jun', '27 Jun'];
+const C_GREEN='#22c55e', C_YELLOW='#eab308', C_RED='#ef4444', C_BLUE='#3b82f6', C_PURPLE='#a855f7';
+const GRID={color:'rgba(46,50,80,0.6)'};
+const isMobile = window.innerWidth < 600;
+const fsz = isMobile ? 9 : 11;
+const TICK={color:'#8891b4',font:{size:fsz}};
+const LEGEND={labels:{color:'#e8eaf0',font:{size:fsz},boxWidth:isMobile?8:12,padding:isMobile?5:8}};
+const baseOpts={
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:LEGEND, tooltip:{bodyFont:{size:12}}},
+  scales:{
+    x:{ticks:{...TICK, maxRotation:isMobile?30:0}, grid:GRID},
+    y:{ticks:TICK, grid:GRID}
+  }
+};
+
+// 1. AW grouped bar
+new Chart(document.getElementById('chartAW'),{
+  type:'bar',
+  data:{
+    labels:['Al corriente','1 cuota','2 cuotas','3 cuotas'],
+    datasets:[
+      {label:'24 Jun',data:[11076,881,75,13],backgroundColor:'rgba(59,130,246,0.45)',borderColor:C_BLUE,borderWidth:1.5},
+      {label:'26 Jun',data:[11195,1150,110,19],backgroundColor:'rgba(168,85,247,0.45)',borderColor:C_PURPLE,borderWidth:1.5},
+      {label:'27 Jun',data:[11301,1213,124,21],backgroundColor:'rgba(239,68,68,0.55)',borderColor:C_RED,borderWidth:1.5}
+    ]
+  },
+  options:baseOpts
+});
+
+// 2. Buckets
+new Chart(document.getElementById('chartBucket'),{
+  type:'bar',
+  data:{
+    labels:['Al día (0)','1–29 días','30–59 días'],
+    datasets:[
+      {label:'24 Jun',data:[11255,777,13],backgroundColor:'rgba(59,130,246,0.45)',borderColor:C_BLUE,borderWidth:1.5},
+      {label:'26 Jun',data:[11334,1121,19],backgroundColor:'rgba(168,85,247,0.45)',borderColor:C_PURPLE,borderWidth:1.5},
+      {label:'27 Jun',data:[11400,1238,21],backgroundColor:'rgba(239,68,68,0.55)',borderColor:C_RED,borderWidth:1.5}
+    ]
+  },
+  options:baseOpts
+});
+
+// 3. Tasas mora line
+new Chart(document.getElementById('chartTasa'),{
+  type:'line',
+  data:{
+    labels:DATES,
+    datasets:[
+      {label:'% Mora / saldo',data:[2.59,3.44,3.67],borderColor:C_YELLOW,backgroundColor:'rgba(234,179,8,0.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:C_YELLOW,tension:0.3,fill:true},
+      {label:'% Mora / clientes',data:[6.56,9.14,9.95],borderColor:C_RED,backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:C_RED,tension:0.3,fill:true},
+      {label:'Umbral 10%',data:[10,10,10],borderColor:'rgba(239,68,68,0.3)',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+    ]
+  },
+  options:{...baseOpts,scales:{x:{ticks:TICK,grid:GRID},y:{ticks:{...TICK,callback:v=>v+'%'},grid:GRID}}}
+});
+
+// 4. Saldo vencido vs vigente stacked
+new Chart(document.getElementById('chartSaldo'),{
+  type:'bar',
+  data:{
+    labels:DATES,
+    datasets:[
+      {label:'Vigente ($)',data:[1049026,1070161,1074331],backgroundColor:'rgba(34,197,94,0.55)',borderColor:C_GREEN,borderWidth:1.5},
+      {label:'Vencido ($)',data:[27880,38159,40924],backgroundColor:'rgba(239,68,68,0.65)',borderColor:C_RED,borderWidth:1.5}
+    ]
+  },
+  options:{...baseOpts,scales:{
+    x:{stacked:true,ticks:TICK,grid:GRID},
+    y:{stacked:true,ticks:{...TICK,callback:v=>'$'+(v/1000).toFixed(0)+'k'},grid:GRID}
+  }}
+});
+
+// 5. Penalidades
+new Chart(document.getElementById('chartPenal'),{
+  type:'bar',
+  data:{
+    labels:DATES,
+    datasets:[{
+      label:'Penalidades ($)',
+      data:[4280,5708,6096],
+      backgroundColor:['rgba(59,130,246,0.55)','rgba(168,85,247,0.55)','rgba(239,68,68,0.65)'],
+      borderColor:[C_BLUE,C_PURPLE,C_RED],
+      borderWidth:2
+    }]
+  },
+  options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},
+    scales:{x:{ticks:TICK,grid:GRID},y:{ticks:{...TICK,callback:v=>'$'+v.toLocaleString()},grid:GRID}}}
+});
+
+// Store data
+const storeData = {
+  '24':{
+    '5 DE JULIO':      {mora:378,pct:6.6,vencido:10483},
+    'BELLO MONTE':     {mora:142,pct:9.8,vencido:4208},
+    'PUERTO CABELLO':  {mora:153,pct:5.5,vencido:4311},
+    'LA TRINIDAD':     {mora:117,pct:10.3,vencido:3194}
+  },
+  '26':{
+    '5 DE JULIO':      {mora:506,pct:8.6,vencido:15397},
+    'BELLO MONTE':     {mora:233,pct:16.1,vencido:6731},
+    'PUERTO CABELLO':  {mora:231,pct:8.2,vencido:5675},
+    'LA TRINIDAD':     {mora:170,pct:14.8,vencido:4623}
+  },
+  '27':{
+    '5 DE JULIO':      {mora:574,pct:9.7,vencido:17670,total:5945,cartera:574922},
+    'BELLO MONTE':     {mora:244,pct:16.9,vencido:7181,total:1442,cartera:105605},
+    'PUERTO CABELLO':  {mora:262,pct:9.2,vencido:6339,total:2835,cartera:214778},
+    'LA TRINIDAD':     {mora:179,pct:15.6,vencido:4993,total:1144,cartera:78964}
+  }
+};
+
+const storeOrder = ['5 DE JULIO','BELLO MONTE','PUERTO CABELLO','LA TRINIDAD'];
+const storeLabels = storeOrder.map(s=>s.replace('DAKA SUCURSAL ','').replace('DAKA AGENCIA ',''));
+
+// 6. Vencido por tienda
+new Chart(document.getElementById('chartStoreMora'),{
+  type:'bar',
+  data:{
+    labels:storeOrder.map(s=>s.length>18?s.slice(0,16)+'…':s),
+    datasets:[
+      {label:'24 Jun ($)',data:storeOrder.map(s=>storeData['24'][s]?.vencido||0),backgroundColor:'rgba(59,130,246,0.45)',borderColor:C_BLUE,borderWidth:1.5},
+      {label:'26 Jun ($)',data:storeOrder.map(s=>storeData['26'][s]?.vencido||0),backgroundColor:'rgba(168,85,247,0.45)',borderColor:C_PURPLE,borderWidth:1.5},
+      {label:'27 Jun ($)',data:storeOrder.map(s=>storeData['27'][s]?.vencido||0),backgroundColor:'rgba(239,68,68,0.55)',borderColor:C_RED,borderWidth:1.5}
+    ]
+  },
+  options:{...baseOpts,indexAxis:'y',scales:{
+    x:{ticks:{...TICK,callback:v=>'$'+(v/1000).toFixed(0)+'k'},grid:GRID},
+    y:{ticks:TICK,grid:GRID}
+  }}
+});
+
+// 7. % mora tienda
+new Chart(document.getElementById('chartStorePct'),{
+  type:'bar',
+  data:{
+    labels:storeOrder.map(s=>s.length>18?s.slice(0,16)+'…':s),
+    datasets:[
+      {label:'24 Jun (%)',data:storeOrder.map(s=>storeData['24'][s]?.pct||0),backgroundColor:'rgba(59,130,246,0.45)',borderColor:C_BLUE,borderWidth:1.5},
+      {label:'26 Jun (%)',data:storeOrder.map(s=>storeData['26'][s]?.pct||0),backgroundColor:'rgba(168,85,247,0.45)',borderColor:C_PURPLE,borderWidth:1.5},
+      {label:'27 Jun (%)',data:storeOrder.map(s=>storeData['27'][s]?.pct||0),backgroundColor:'rgba(239,68,68,0.55)',borderColor:C_RED,borderWidth:1.5}
+    ]
+  },
+  options:{...baseOpts,indexAxis:'y',scales:{
+    x:{ticks:{...TICK,callback:v=>v+'%'},grid:GRID},
+    y:{ticks:TICK,grid:GRID}
+  }}
+});
+
+// Store table
+const zeroPct24 = [{store:'DAKA SUCURSAL PORLAMAR',total:309,mora:0,pct:0.0,vencido:0,cartera:32621},{store:'DAKA SUCURSAL BARQUISIMETO',total:321,mora:0,pct:0.0,vencido:0,cartera:37323},{store:'DAKA SUCURSAL LECHERÍA',total:303,mora:0,pct:0.0,vencido:0,cartera:32651},{store:'DAKA SUCURSAL VALERA',total:15,mora:0,pct:0.0,vencido:0,cartera:1602}];
+const stores27 = [
+  {store:'DAKA SUCURSAL 5 DE JULIO',     total:5945, mora:574, pct:9.7,  vencido:17670, cartera:574922},
+  {store:'DAKA AGENCIA PUERTO CABELLO',  total:2835, mora:262, pct:9.2,  vencido:6339,  cartera:214778},
+  {store:'DAKA SUCURSAL BELLO MONTE',    total:1442, mora:244, pct:16.9, vencido:7181,  cartera:105605},
+  {store:'DAKA SUCURSAL LA TRINIDAD',    total:1144, mora:179, pct:15.6, vencido:4993,  cartera:78964},
+  {store:'DAKA SUCURSAL PORLAMAR',       total:382,  mora:0,   pct:0.0,  vencido:0,     cartera:40291},
+  {store:'DAKA SUCURSAL BARQUISIMETO',   total:386,  mora:0,   pct:0.0,  vencido:0,     cartera:44392},
+  {store:'DAKA SUCURSAL LECHERÍA',       total:427,  mora:0,   pct:0.0,  vencido:0,     cartera:46989},
+  {store:'DAKA SUCURSAL VALERA',         total:98,   mora:0,   pct:0.0,  vencido:0,     cartera:9313}
+];
+const pct26map = {'DAKA SUCURSAL 5 DE JULIO':8.6,'DAKA AGENCIA PUERTO CABELLO':8.2,'DAKA SUCURSAL BELLO MONTE':16.1,'DAKA SUCURSAL LA TRINIDAD':14.8};
+const pct24map = {'DAKA SUCURSAL 5 DE JULIO':6.6,'DAKA AGENCIA PUERTO CABELLO':5.5,'DAKA SUCURSAL BELLO MONTE':9.8,'DAKA SUCURSAL LA TRINIDAD':10.3};
+
+const tbody = document.getElementById('storeTableBody');
+const maxPct = Math.max(...stores27.map(s=>s.pct));
+stores27.forEach((s,idx)=>{
+  const p26 = pct26map[s.store]||0, p24 = pct24map[s.store]||0;
+  const delta = (s.pct - p26).toFixed(1);
+  const dc = parseFloat(delta)>0?'up':parseFloat(delta)<0?'down':'zero';
+  const ds = parseFloat(delta)>0?'+'+delta+' pp':delta+' pp';
+  const isRed=s.pct>=10, isYellow=s.pct>=5&&s.pct<10;
+  const pc = isRed?'pill-red':isYellow?'pill-yellow':s.pct===0?'pill-muted':'pill-green';
+  const pt = isRed?'🔴 Alto':isYellow?'🟡 Medio':s.pct===0?'⚪ Sin mora':'🟢 Bajo';
+  const barW = s.pct===0?0:(s.pct/maxPct*100).toFixed(1);
+  const barC = isRed?C_RED:isYellow?C_YELLOW:'#8891b4';
+  const shortName = s.store.replace('DAKA SUCURSAL ','').replace('DAKA AGENCIA ','');
+  tbody.innerHTML+=`<tr>
+    <td><span class="rank-num">${idx+1}</span></td>
+    <td>${shortName}</td>
+    <td class="right hide-mobile">${s.total.toLocaleString()}</td>
+    <td class="right hide-mobile">$${s.cartera.toLocaleString('es-VE',{maximumFractionDigits:0})}</td>
+    <td class="right">${s.mora}</td>
+    <td class="right hide-mobile">$${s.vencido.toLocaleString('es-VE',{maximumFractionDigits:0})}</td>
+    <td class="right hide-mobile">${p24.toFixed(1)}%</td>
+    <td class="right hide-mobile">${p26.toFixed(1)}%</td>
+    <td class="right"><strong>${s.pct.toFixed(1)}%</strong></td>
+    <td class="right"><span class="delta-cell ${dc}">${ds}</span></td>
+    <td><span class="pill ${pc}">${pt}</span></td>
+  </tr>`;
+});
+</script>
+</body>
+</html>
