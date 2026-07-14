@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dashboard de Cartera · Cobranza BNPL — Bancaribe</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#1A2E66; --navy-dark:#101d45; --navy-soft:#e9ecf6;
+    --teal:#02D7D7; --teal-dark:#00a3a3; --teal-soft:#e2fbfb;
+    --bg:#f4f6fb; --surface:#ffffff; --border:#e2e6f2;
+    --text:#1a2038; --muted:#6b7290;
+    --green:#1a9c6e; --green-bg:#e6f7f0;
+    --amber:#c8850a; --amber-bg:#fdf3e0;
+    --red:#d1372f; --red-bg:#fbe9e8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.45;}
+  a{color:inherit;}
+
+  /* HEADER */
+  .topbar{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-dark) 100%);color:#fff;padding:20px 28px;}
+  .topbar-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;max-width:1400px;margin:0 auto;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:38px;height:38px;border-radius:10px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy-dark);font-size:16px;flex-shrink:0;}
+  .brand h1{font-size:19px;font-weight:700;letter-spacing:-0.2px;}
+  .brand span{font-size:12px;color:#b9c2e8;display:block;margin-top:2px;}
+  .cut-badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .badge{padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;border:1px solid;white-space:nowrap;}
+  .badge-official{background:rgba(2,215,215,0.14);border-color:var(--teal);color:var(--teal);}
+  .badge-prelim{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.35);color:#fff;}
+
+  .insight-bar{background:var(--navy-soft);border-bottom:1px solid var(--border);padding:12px 28px;font-size:12.5px;color:var(--navy);line-height:1.6;}
+  .insight-bar-inner{max-width:1400px;margin:0 auto;display:flex;gap:10px;align-items:flex-start;}
+  .insight-bar .ic{flex-shrink:0;font-size:16px;margin-top:1px;}
+  .insight-bar strong{color:var(--navy-dark);}
+
+  .main{max-width:1400px;margin:0 auto;padding:22px 28px 40px;}
+
+  .note-box{background:var(--teal-soft);border:1px solid #b7ecec;border-radius:10px;padding:12px 16px;font-size:12px;color:var(--navy);margin-bottom:20px;line-height:1.6;}
+  .note-box strong{color:var(--teal-dark);}
+
+  .section-title{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.7px;margin:28px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--navy-soft);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .section-title .sub{font-size:11px;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0;}
+  .section-title:first-of-type{margin-top:0;}
+
+  /* KPI */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;box-shadow:0 1px 2px rgba(16,29,69,0.04);position:relative;}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;background:var(--navy-soft);}
+  .kpi-card.teal::before{background:var(--teal);}
+  .kpi-card.green::before{background:var(--green);}
+  .kpi-card.amber::before{background:var(--amber);}
+  .kpi-card.red::before{background:var(--red);}
+  .kpi-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;}
+  .kpi-value{font-size:25px;font-weight:800;letter-spacing:-0.3px;color:var(--navy-dark);}
+  .kpi-value.red{color:var(--red);}
+  .kpi-value.amber{color:var(--amber);}
+  .kpi-value.green{color:var(--green);}
+  .kpi-foot{font-size:11px;color:var(--muted);margin-top:6px;}
+  .kpi-chip{display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;margin-top:7px;}
+  .chip-bad{background:var(--red-bg);color:var(--red);}
+  .chip-good{background:var(--green-bg);color:var(--green);}
+  .chip-neutral{background:var(--navy-soft);color:var(--navy);}
+
+  /* CHARTS */
+  .charts-row{display:grid;gap:14px;margin-bottom:14px;}
+  .charts-row-2{grid-template-columns:1.3fr 1fr;}
+  .charts-row-3{grid-template-columns:1fr 1fr 1fr;}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 2px rgba(16,29,69,0.04);}
+  .chart-card h3{font-size:12.5px;font-weight:700;margin-bottom:2px;color:var(--navy-dark);line-height:1.3;}
+  .chart-card .chart-sub{font-size:11px;color:var(--muted);margin-bottom:10px;}
+  .chart-wrap{position:relative;}
+
+  .stat-strip{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  .stat-pill{flex:1;min-width:110px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;}
+  .stat-pill .n{font-size:16px;font-weight:800;color:var(--navy-dark);}
+  .stat-pill .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;}
+
+  /* TABLES */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;}
+  .data-table{width:100%;border-collapse:collapse;min-width:640px;}
+  .data-table th{text-align:right;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;padding:9px 10px;border-bottom:2px solid var(--border);white-space:nowrap;background:var(--bg);}
+  .data-table th:first-child,.data-table td:first-child{text-align:left;}
+  .data-table td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:12px;white-space:nowrap;text-align:right;}
+  .data-table td:first-child{font-weight:600;color:var(--navy-dark);}
+  .data-table tr:hover td{background:var(--navy-soft);}
+  .data-table tr:last-child td{border-bottom:none;font-weight:700;background:var(--bg);}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+  .pill-red{background:var(--red-bg);color:var(--red);}
+  .pill-amber{background:var(--amber-bg);color:var(--amber);}
+  .pill-green{background:var(--green-bg);color:var(--green);}
+  .pill-muted{background:var(--navy-soft);color:var(--navy);}
+
+  /* RECOMENDACIONES */
+  .reco-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+  .reco-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(16,29,69,0.04);}
+  .reco-card .reco-num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:800;align-items:center;justify-content:center;margin-bottom:10px;}
+  .reco-card h4{font-size:13px;font-weight:700;color:var(--navy-dark);margin-bottom:6px;}
+  .reco-card p{font-size:12px;color:var(--muted);line-height:1.55;}
+  .reco-card.priority{border-color:var(--teal);background:var(--teal-soft);}
+  .reco-card.priority .reco-num{background:var(--teal-dark);}
+
+  .footer{text-align:center;padding:22px 20px;color:var(--muted);font-size:11px;border-top:1px solid var(--border);line-height:1.8;margin-top:20px;}
+  .footer a{color:var(--teal-dark);font-weight:600;text-decoration:none;}
+
+  @media(max-width:1000px){
+    .charts-row-2,.charts-row-3{grid-template-columns:1fr;}
+  }
+  @media(max-width:640px){
+    .topbar,.main,.insight-bar{padding-left:16px;padding-right:16px;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .kpi-value{font-size:20px;}
+    .chart-card{padding:13px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">BC</div>
+      <div>
+        <h1>Dashboard Operativo de Cartera — Cobranza BNPL</h1>
+        <span>Bancaribe · Órdenes Compra a Cuotas (Umbrella / Beclever)</span>
+      </div>
+    </div>
+    <div class="cut-badges">
+      <div class="badge badge-official" id="badgeOfficial">⚑ Oficial: 06 jul 2026</div>
+      <div class="badge badge-prelim" id="badgePrelim">● Preliminar: 13 jul 2026, 10:04 p.m.</div>
+    </div>
+  </div>
+</div>
+
+<div class="insight-bar">
+  <div class="insight-bar-inner">
+    <span class="ic">📌</span>
+    <div>
+      <strong>Lectura ejecutiva:</strong> el capital en mora se aceleró marcadamente desde el corte del 22/06 (Índice de Morosidad por capital pasó de ≈5.9% a 13.2% hacia el 29/06), coincidiendo con los sismos en Venezuela y el aumento de mora reportado por Riesgo a partir del 25/06. El IMOR oficial cede de 4.0% a 3.8% en el último corte auditado, pero el corte preliminar del 13/07 muestra una nueva alza a ≈4.5% — <strong>a vigilar en el próximo cierre semanal.</strong> El 93.8% del monto vencido sigue concentrado en mora joven (1–29 días): ventana de cobranza preventiva.
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="note-box">
+    <strong>Cómo leer este dashboard:</strong> las cifras marcadas <span class="badge badge-official" style="padding:1px 8px;font-size:10px;color:var(--teal-dark);">Oficial</span> provienen del consolidado semanal de Comité de Crédito (10 cortes, 05/05–06/07/2026, fuente: «Órdenes Generadas Contabilidad»). Las cifras <span class="badge badge-prelim" style="padding:1px 8px;font-size:10px;color:var(--navy);border-color:var(--navy-soft);">Preliminar</span> se calculan cada noche a partir del reporte crudo más reciente de Beclever y aún no pasan por el proceso de consolidación/auditoría del comité — úsense como alerta temprana, no como cifra de cierre.
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-title">Indicadores clave de la cartera <span class="sub">Semana oficial 06/07 vs. anterior 29/06 · con adelanto preliminar 13/07</span></div>
+  <div class="kpi-grid">
+
+    <div class="kpi-card red">
+      <div class="kpi-label">IMOR oficial (monto vencido / cartera)</div>
+      <div class="kpi-value red" id="kpiImorOficial">3.8%</div>
+      <div class="kpi-foot">Monto vencido (cuotas impagas) ÷ capital total financiado</div>
+      <span class="kpi-chip chip-good" id="kpiImorOficialDelta">▼ -0.2pp vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card amber">
+      <div class="kpi-label">Índice de morosidad por capital</div>
+      <div class="kpi-value amber" id="kpiImorCapital">11.6%</div>
+      <div class="kpi-foot">Capital de órdenes en mora ÷ capital total (reclasificación por orden)</div>
+      <span class="kpi-chip chip-good" id="kpiImorCapitalDelta">▼ -1.7pp vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card teal">
+      <div class="kpi-label">Cartera total (capital financiado)</div>
+      <div class="kpi-value" id="kpiCapitalTotal">$1.90 MM</div>
+      <div class="kpi-foot" id="kpiCapitalTotalFoot">16,637 órdenes activas</div>
+      <span class="kpi-chip chip-bad" id="kpiCapitalTotalDelta">▲ +25.2% vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Cartera vigente</div>
+      <div class="kpi-value" id="kpiCapitalVigente">$1.68 MM</div>
+      <div class="kpi-foot">88.4% de la cartera total</div>
+      <span class="kpi-chip chip-good">▲ +27.6% vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card red">
+      <div class="kpi-label">Capital vencido (órdenes en mora)</div>
+      <div class="kpi-value red" id="kpiCapitalVencido">$219.5 K</div>
+      <div class="kpi-foot">11.6% de la cartera total</div>
+      <span class="kpi-chip chip-bad">▲ +9.5% vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card amber">
+      <div class="kpi-label">Monto vencido (solo cuotas impagas)</div>
+      <div class="kpi-value amber" id="kpiMontoVencido">$72.3 K</div>
+      <div class="kpi-foot">Base del IMOR oficial</div>
+      <span class="kpi-chip chip-bad">▲ +20.3% vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Órdenes en mora (≥1 día)</div>
+      <div class="kpi-value" id="kpiOrdenesMora">1,973</div>
+      <div class="kpi-foot">11.9% de las órdenes activas</div>
+      <span class="kpi-chip chip-bad">▲ +9.3% vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card green">
+      <div class="kpi-label">Recuperación semanal</div>
+      <div class="kpi-value green" id="kpiRecuperacion">$821</div>
+      <div class="kpi-foot">Incremento en cuotas pagadas vs. semana anterior</div>
+      <span class="kpi-chip chip-neutral">Baja vs. capital vencido</span>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">% Cuotas vencidas</div>
+      <div class="kpi-value" id="kpiPctCuotasVencidas">4.3%</div>
+      <div class="kpi-foot">2,839 de 66,548 cuotas totales</div>
+      <span class="kpi-chip chip-good">▼ -0.1pp vs. semana anterior</span>
+    </div>
+
+    <div class="kpi-card teal">
+      <div class="kpi-label">Órdenes activas (preliminar, anoche)</div>
+      <div class="kpi-value" id="kpiOrdenesPrelim">19,676</div>
+      <div class="kpi-foot" id="kpiOrdenesPrelimFoot">Corte 13/07/2026 · sin auditar</div>
+    </div>
+
+  </div>
+
+  <!-- CHARTS: evolución + morosidad -->
+  <div class="section-title">Evolución de la cartera <span class="sub">10 cortes semanales oficiales + 1 preliminar</span></div>
+  <div class="charts-row charts-row-2">
+    <div class="chart-card">
+      <h3>Índice de morosidad — evolución semanal</h3>
+      <div class="chart-sub">IMOR oficial (monto vencido) vs. Índice de morosidad por capital</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartImorEvol"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Capital vigente vs. vencido ($)</h3>
+      <div class="chart-sub">Composición de la cartera por corte</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chartCapitalStack"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-row charts-row-3">
+    <div class="chart-card">
+      <h3>Crecimiento de la cartera</h3>
+      <div class="chart-sub">Número de órdenes activas</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartOrdenes"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Órdenes en mora</h3>
+      <div class="chart-sub">Conteo y % sobre cartera activa</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartOrdenesMora"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Recuperación semanal ($)</h3>
+      <div class="chart-sub">Incremento en cuotas pagadas vs. semana previa</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chartRecuperacion"></canvas></div>
+    </div>
+  </div>
+
+  <!-- BUCKETS DE MORA -->
+  <div class="section-title">Distribución de cartera por buckets de mora <span class="sub">Antigüedad de mora · corte oficial 06/07/2026</span></div>
+  <div class="charts-row charts-row-2">
+    <div class="chart-card">
+      <h3>Capital por bucket de días de atraso</h3>
+      <div class="chart-sub">Clasificación de todo el capital de la orden según antigüedad de su cuota más atrasada</div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chartBucketCapital"></canvas></div>
+      <div class="stat-strip">
+        <div class="stat-pill"><div class="n">88.4%</div><div class="l">Vigente (0d)</div></div>
+        <div class="stat-pill"><div class="n">11.3%</div><div class="l">1–29 días</div></div>
+        <div class="stat-pill"><div class="n">0.3%</div><div class="l">30–59 días</div></div>
+        <div class="stat-pill"><div class="n">0.0%</div><div class="l">60+ días</div></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Monto vencido por bucket (cuotas impagas)</h3>
+      <div class="chart-sub">La mora es joven y recuperable: 93.8% del monto vencido está en 1–29 días</div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chartBucketVencido"></canvas></div>
+      <div class="stat-strip">
+        <div class="stat-pill"><div class="n">$67.8K</div><div class="l">1–29 días · 93.8%</div></div>
+        <div class="stat-pill"><div class="n">$4.5K</div><div class="l">30–59 días · 6.2%</div></div>
+        <div class="stat-pill"><div class="n">$0</div><div class="l">60+ días · 0.0%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:14px">
+    <h3 style="margin-bottom:10px">Detalle por bucket de mora — corte 06/07/2026</h3>
+    <div class="table-scroll">
+    <table class="data-table" id="tableBuckets">
+      <thead><tr>
+        <th style="text-align:left">Bucket</th>
+        <th>Capital ($)</th>
+        <th>N Órdenes</th>
+        <th>Cuotas totales</th>
+        <th>Cuotas vigentes</th>
+        <th>Cuotas vencidas</th>
+        <th>% Capital</th>
+        <th>Capital sem. anterior</th>
+        <th>Var. %</th>
+        <th>Monto vencido ($)</th>
+        <th>% Monto vencido</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- CUOTAS VENCIDAS -->
+  <div class="section-title">Concentración del deterioro — cuotas vencidas por orden <span class="sub">Solo órdenes en mora · corte oficial 06/07/2026</span></div>
+  <div class="charts-row charts-row-2">
+    <div class="chart-card">
+      <h3>Órdenes en mora por número de cuotas vencidas</h3>
+      <div class="chart-sub">93.8% de las órdenes en mora tiene solo 1 ó 2 cuotas vencidas — ventana de mayor apalancamiento para cobranza preventiva</div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chartCuotasVencidas"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Monto vencido por número de cuotas vencidas</h3>
+      <div class="chart-sub">Después de la 3.ª cuota, la probabilidad de recuperación cae y el caso escala a gestión externa (Corfin)</div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chartCuotasVencidasMonto"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:14px">
+    <h3 style="margin-bottom:10px">Detalle de concentración por cuotas vencidas — corte 06/07/2026</h3>
+    <div class="table-scroll">
+    <table class="data-table" id="tableCuotasVencidas">
+      <thead><tr>
+        <th style="text-align:left">N cuotas vencidas</th>
+        <th>N Órdenes</th>
+        <th>% de órdenes en mora</th>
+        <th>Capital vencido ($)</th>
+        <th>% Capital vencido</th>
+        <th>Cuotas totales</th>
+        <th>Cuotas vencidas</th>
+        <th>Monto vencido ($)</th>
+        <th>% Monto vencido</th>
+        <th>Gestión</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- COMPARATIVO SEMANAL -->
+  <div class="section-title">Comparativo semanal — histórico completo <span class="sub">05/05 – 06/07/2026 (10 cortes oficiales) + preliminar 13/07</span></div>
+  <div class="chart-card" style="margin-bottom:14px">
+    <div class="table-scroll">
+    <table class="data-table" id="tableComparativo" style="min-width:1100px">
+      <thead><tr>
+        <th style="text-align:left">Semana</th>
+        <th>Capital vigente ($)</th>
+        <th>Capital vencido ($)</th>
+        <th>IMOR capital</th>
+        <th>Monto vencido ($)</th>
+        <th>IMOR oficial</th>
+        <th>N órdenes</th>
+        <th>N órdenes mora</th>
+        <th>Cuotas vencidas</th>
+        <th>Recuperación ($)</th>
+        <th>Var. % cap. vencido</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- RECOMENDACIONES -->
+  <div class="section-title">Recomendaciones operativas para la estrategia de cobranza</div>
+  <div class="reco-grid">
+    <div class="reco-card priority">
+      <div class="reco-num">1</div>
+      <h4>Blindar la ventana de 1–29 días</h4>
+      <p>El 93.8% del monto vencido y el 93.8% de las órdenes en mora están en etapa temprana (1–2 cuotas / 1–29 días). Es la ventana de mayor retorno para cobranza preventiva antes de escalar a gestión externa.</p>
+    </div>
+    <div class="reco-card priority">
+      <div class="reco-num">2</div>
+      <h4>Frenar la migración a 3+ cuotas vencidas</h4>
+      <p>Solo 54 órdenes (0.3% del capital) están en el bucket 30–59 días, pero creció +77.3% semana contra semana — la tasa de crecimiento más alta de todos los buckets. Priorizar gestión temprana de las cuentas con 2 cuotas vencidas (359 órdenes) antes de que migren.</p>
+    </div>
+    <div class="reco-card">
+      <div class="reco-num">3</div>
+      <h4>Investigar el salto del 22/06 al 29/06</h4>
+      <p>El Índice de Morosidad por capital saltó de ≈5.9% a 13.2% en una semana, coincidiendo con los sismos en Venezuela y el aumento de mora reportado por Riesgo desde el 25/06. Confirmar si el preliminar del 13/07 (≈4.5% IMOR oficial) indica una nueva aceleración o una normalización.</p>
+    </div>
+    <div class="reco-card">
+      <div class="reco-num">4</div>
+      <h4>Cerrar la brecha de recuperación</h4>
+      <p>La recuperación semanal ($821) sigue siendo baja frente al capital vencido ($219.5K). El resumen ejecutivo señala brechas de integración de datos banco–ICS–plataforma como causa probable — resolverlas debe ser prioridad de Operaciones.</p>
+    </div>
+    <div class="reco-card">
+      <div class="reco-num">5</div>
+      <h4>Vigilar la cartera de 60+ días</h4>
+      <p>Actualmente en $0 — la cartera aún no ha acumulado deterioro estructural severo. Mantener este indicador en el radar semanal como señal de alarma temprana de mora crónica.</p>
+    </div>
+    <div class="reco-card">
+      <div class="reco-num">6</div>
+      <h4>Cruzar con el detalle por tienda</h4>
+      <p>Para intervención operativa diaria por sucursal (DAKA Bello Monte, 5 de Julio, Puerto Cabello, etc.), usar el dashboard complementario de seguimiento diario: <a href="https://aahhxc.github.io/DashboardDaka/dashboard_cartera_daka.html" target="_blank" rel="noopener">DashboardDaka</a>.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Dashboard generado y mantenido por Claude para Bancaribe · Umbrella / Beclever — Cobranza BNPL<br>
+  Fuente oficial: consolidado semanal «Dashboard Ejecutivo de Cobranza» (Comité de Crédito), 10 cortes 05/05–06/07/2026 · Unidad de análisis: orden.<br>
+  Fuente preliminar: reporte nocturno «RPT Ordenes Generadas Contabilidad» (Beclever, vía Outlook), leído automáticamente cada noche.<br>
+  IMOR oficial = monto de cuotas vencidas e impagas ÷ capital total financiado de la cartera. Repositorio: <a href="https://github.com/AAHHxC/DashboardDaka" target="_blank" rel="noopener">github.com/AAHHxC/DashboardDaka</a> · Última actualización: <span id="footerUpdated"></span>
+</div>
+
+<script>
+/* ============================================================
+   DATA — reemplazado cada noche por la tarea programada.
+   Todo lo que ve el usuario sale de este objeto.
+   ============================================================ */
+const DATA = {
+  meta: {
+    officialCutLabel: "06 jul 2026",
+    prelimCutLabel: "13 jul 2026, 10:04 p.m.",
+    lastUpdated: "14 jul 2026, 00:20"
+  },
+  weekly: [
+    // Semana, CapVigente, CapVencido, ImorCapitalPct, MontoVencido, ImorOficialPct, NOrdenes, NOrdenesMora, CuotasVencidas, Recuperacion, VarPctCapVencido, oficial(bool)
+    {semana:"05 may", capVigente:110,       capVencido:25,      imorCapital:18.6, montoVencido:12,     imorOficial:8.8, nOrdenes:6,     nOrdenesMora:2,    cuotasVencidas:3,    recuperacion:null, varPct:null,   oficial:true},
+    {semana:"11 may", capVigente:69007,     capVencido:0,       imorCapital:0.0,  montoVencido:0,      imorOficial:0.0, nOrdenes:720,   nOrdenesMora:0,    cuotasVencidas:0,    recuperacion:null, varPct:-100.0, oficial:true},
+    {semana:"19 may", capVigente:152648,    capVencido:0,       imorCapital:0.0,  montoVencido:0,      imorOficial:0.0, nOrdenes:1549,  nOrdenesMora:0,    cuotasVencidas:0,    recuperacion:39,   varPct:null,   oficial:true},
+    {semana:"29 may", capVigente:396189,    capVencido:11779,   imorCapital:2.9,  montoVencido:3176,   imorOficial:0.8, nOrdenes:3708,  nOrdenesMora:113,  cuotasVencidas:111,  recuperacion:329,  varPct:null,   oficial:true},
+    {semana:"01 jun", capVigente:580567,    capVencido:16905,   imorCapital:2.8,  montoVencido:4549,   imorOficial:0.8, nOrdenes:5278,  nOrdenesMora:166,  cuotasVencidas:158,  recuperacion:156,  varPct:43.5,   oficial:true},
+    {semana:"08 jun", capVigente:837582,    capVencido:28572,   imorCapital:3.3,  montoVencido:8269,   imorOficial:1.0, nOrdenes:7546,  nOrdenesMora:278,  cuotasVencidas:412,  recuperacion:520,  varPct:69.0,   oficial:true},
+    {semana:"15 jun", capVigente:977661,    capVencido:68495,   imorCapital:6.5,  montoVencido:19428,  imorOficial:1.9, nOrdenes:9071,  nOrdenesMora:627,  cuotasVencidas:847,  recuperacion:1013, varPct:139.7,  oficial:true},
+    {semana:"22 jun", capVigente:1270352,   capVencido:78963,   imorCapital:5.9,  montoVencido:22601,  imorOficial:1.7, nOrdenes:11755, nOrdenesMora:721,  cuotasVencidas:1026, recuperacion:833,  varPct:15.3,   oficial:true},
+    {semana:"29 jun", capVigente:1315494,   capVencido:200373,  imorCapital:13.2, montoVencido:60118,  imorOficial:4.0, nOrdenes:13238, nOrdenesMora:1805, cuotasVencidas:2325, recuperacion:1753, varPct:153.8,  oficial:true},
+    {semana:"06 jul", capVigente:1678109,   capVencido:219451,  imorCapital:11.6, montoVencido:72339,  imorOficial:3.8, nOrdenes:16637, nOrdenesMora:1973, cuotasVencidas:2839, recuperacion:821,  varPct:9.5,    oficial:true},
+    {semana:"13 jul*",capVigente:null,      capVencido:null,    imorCapital:null, montoVencido:98934,  imorOficial:4.46,nOrdenes:19676, nOrdenesMora:null, cuotasVencidas:null, recuperacion:null, varPct:null,   oficial:false}
+  ],
+  buckets: [
+    {label:"Vigente (0 días)", capital:1678109, nOrdenes:14664, cuotasTotales:58656, cuotasVigentes:58191, cuotasVencidas:465, pctCapital:88.4, capitalAnterior:1315494, varPct:27.6, montoVencido:0,     pctMontoVencido:0.0},
+    {label:"1 a 29 días",      capital:214234,  nOrdenes:1919,  cuotasTotales:7676,  cuotasVigentes:5467,  cuotasVencidas:2209,pctCapital:11.3, capitalAnterior:197429,  varPct:8.5,  montoVencido:67820, pctMontoVencido:93.8},
+    {label:"30 a 59 días",     capital:5218,    nOrdenes:54,    cuotasTotales:216,   cuotasVigentes:51,    cuotasVencidas:165, pctCapital:0.3,  capitalAnterior:2943,    varPct:77.3, montoVencido:4519,  pctMontoVencido:6.2},
+    {label:"60 días o más",    capital:0,       nOrdenes:0,     cuotasTotales:0,     cuotasVigentes:0,     cuotasVencidas:0,   pctCapital:0.0,  capitalAnterior:0,       varPct:null, montoVencido:0,     pctMontoVencido:0.0}
+  ],
+  cuotasVencidas: [
+    {label:"0 (al día, sin cuota vencida)", nOrdenes:69,   pctOrdenesMora:3.5,  capitalVencido:4450,   pctCapitalVencido:2.0,  cuotasTotales:276,  cuotasVencidas:0,    montoVencido:0,     pctMontoVencido:0.0, gestion:"Vigente / Sin gestión"},
+    {label:"1 cuota",                        nOrdenes:1491, pctOrdenesMora:75.6, capitalVencido:169194, pctCapitalVencido:77.1, cuotasTotales:5964, cuotasVencidas:1491, montoVencido:45389, pctMontoVencido:62.7,"gestion":"Colektia (preventiva)"},
+    {label:"2 cuotas",                        nOrdenes:359,  pctOrdenesMora:18.2, capitalVencido:40589,  pctCapitalVencido:18.5, cuotasTotales:1436, cuotasVencidas:718,  montoVencido:22431, pctMontoVencido:31.0,"gestion":"Colektia (intensiva)"},
+    {label:"3 cuotas",                        nOrdenes:51,   pctOrdenesMora:2.6,  capitalVencido:5014,   pctCapitalVencido:2.3,  cuotasTotales:204,  cuotasVencidas:153,  montoVencido:4279,  pctMontoVencido:5.9,"gestion":"Transición a Corfin"},
+    {label:"4+ cuotas",                       nOrdenes:3,    pctOrdenesMora:0.2,  capitalVencido:204,    pctCapitalVencido:0.1,  cuotasTotales:12,   cuotasVencidas:12,   montoVencido:240,   pctMontoVencido:0.3,"gestion":"Corfin (gestión externa)"}
+  ]
+};
+
+document.getElementById('footerUpdated').textContent = DATA.meta.lastUpdated;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const NAVY='#1A2E66', NAVY_SOFT='#8891c9', TEAL='#02D7D7', TEAL_DARK='#00a3a3',
+      RED='#d1372f', AMBER='#c8850a', GREEN='#1a9c6e', MUTED='#6b7290';
+const GRID={color:'rgba(26,46,102,0.08)'};
+const isMobile = window.innerWidth < 640;
+const fsz = isMobile ? 9 : 11;
+const TICK={color:MUTED,font:{size:fsz}};
+const LEGEND={labels:{color:NAVY,font:{size:fsz,weight:'600'},boxWidth:isMobile?8:12,padding:isMobile?6:10}};
+const baseOpts={
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:LEGEND, tooltip:{bodyFont:{size:12},titleFont:{size:12}}},
+  scales:{
+    x:{ticks:{...TICK, maxRotation:isMobile?40:0}, grid:{display:false}},
+    y:{ticks:TICK, grid:GRID}
+  }
+};
+function fmtUSD(n, decimals=0){
+  if(n===null||n===undefined) return '—';
+  return '$' + n.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+}
+function fmtUSDk(n){
+  if(n===null||n===undefined) return '—';
+  if(Math.abs(n)>=1000000) return '$'+(n/1000000).toFixed(2)+'MM';
+  if(Math.abs(n)>=1000) return '$'+(n/1000).toFixed(1)+'K';
+  return '$'+n.toFixed(0);
+}
+function fmtPct(n, decimals=1){
+  if(n===null||n===undefined) return '—';
+  return n.toFixed(decimals)+'%';
+}
+function fmtInt(n){
+  if(n===null||n===undefined) return '—';
+  return n.toLocaleString('en-US');
+}
+
+const W = DATA.weekly;
+const labels = W.map(w=>w.semana);
+
+/* 1. IMOR evolution */
+new Chart(document.getElementById('chartImorEvol'),{
+  type:'line',
+  data:{
+    labels,
+    datasets:[
+      {label:'IMOR oficial (monto vencido)',data:W.map(w=>w.imorOficial),borderColor:RED,backgroundColor:'rgba(209,55,47,0.08)',borderWidth:2.5,pointRadius:W.map(w=>w.oficial?4:6),pointStyle:W.map(w=>w.oficial?'circle':'rectRot'),pointBackgroundColor:W.map(w=>w.oficial?RED:AMBER),tension:0.3,fill:true,spanGaps:true},
+      {label:'Índice de morosidad por capital',data:W.map(w=>w.imorCapital),borderColor:NAVY,backgroundColor:'rgba(26,46,102,0.06)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:NAVY,tension:0.3,fill:true,spanGaps:true}
+    ]
+  },
+  options:{...baseOpts,scales:{x:{ticks:TICK,grid:{display:false}},y:{ticks:{...TICK,callback:v=>v+'%'},grid:GRID}}}
+});
+
+/* 2. Capital stack — solo cortes oficiales (capVigente/capVencido usan la misma metodologia de bucket, el preliminar aun no la tiene) */
+const Woficial = W.filter(w=>w.oficial);
+new Chart(document.getElementById('chartCapitalStack'),{
+  type:'bar',
+  data:{
+    labels:Woficial.map(w=>w.semana),
+    datasets:[
+      {label:'Capital vigente ($)',data:Woficial.map(w=>w.capVigente),backgroundColor:'rgba(2,215,215,0.55)',borderColor:TEAL_DARK,borderWidth:1.5},
+      {label:'Capital vencido ($)',data:Woficial.map(w=>w.capVencido),backgroundColor:'rgba(209,55,47,0.6)',borderColor:RED,borderWidth:1.5}
+    ]
+  },
+  options:{...baseOpts,scales:{
+    x:{stacked:true,ticks:TICK,grid:{display:false}},
+    y:{stacked:true,ticks:{...TICK,callback:v=>fmtUSDk(v)},grid:GRID}
+  }}
+});
+
+/* 3. Ordenes growth */
+new Chart(document.getElementById('chartOrdenes'),{
+  type:'line',
+  data:{labels,datasets:[{label:'Órdenes activas',data:W.map(w=>w.nOrdenes),borderColor:NAVY,backgroundColor:'rgba(26,46,102,0.08)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:NAVY,tension:0.3,fill:true}]},
+  options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}}}
+});
+
+/* 4. Ordenes en mora */
+new Chart(document.getElementById('chartOrdenesMora'),{
+  type:'bar',
+  data:{labels,datasets:[{label:'Órdenes en mora',data:W.map(w=>w.nOrdenesMora),backgroundColor:'rgba(200,133,10,0.55)',borderColor:AMBER,borderWidth:1.5}]},
+  options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}}}
+});
+
+/* 5. Recuperacion */
+new Chart(document.getElementById('chartRecuperacion'),{
+  type:'bar',
+  data:{labels,datasets:[{label:'Recuperación ($)',data:W.map(w=>w.recuperacion),backgroundColor:'rgba(26,156,110,0.55)',borderColor:GREEN,borderWidth:1.5}]},
+  options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},scales:{...baseOpts.scales,y:{ticks:{...TICK,callback:v=>fmtUSD(v)},grid:GRID}}}
+});
+
+/* 6. Bucket capital donut */
+const B = DATA.buckets;
+new Chart(document.getElementById('chartBucketCapital'),{
+  type:'doughnut',
+  data:{
+    labels:B.map(b=>b.label),
+    datasets:[{data:B.map(b=>b.capital),backgroundColor:[TEAL,AMBER,RED,'#7a1f1a'],borderColor:'#fff',borderWidth:2}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:LEGEND.labels},tooltip:{callbacks:{label:ctx=>ctx.label+': '+fmtUSD(ctx.raw)}}}}
+});
+
+/* 7. Bucket monto vencido bar */
+new Chart(document.getElementById('chartBucketVencido'),{
+  type:'bar',
+  data:{
+    labels:B.filter(b=>b.capital>0||b.montoVencido>0).map(b=>b.label).slice(1),
+    datasets:[{label:'Monto vencido ($)',data:B.slice(1).map(b=>b.montoVencido),backgroundColor:[ 'rgba(200,133,10,0.6)','rgba(209,55,47,0.6)','rgba(122,31,26,0.6)'],borderColor:[AMBER,RED,'#7a1f1a'],borderWidth:1.5}]
+  },
+  options:{...baseOpts,indexAxis:'y',plugins:{...baseOpts.plugins,legend:{display:false}},scales:{x:{ticks:{...TICK,callback:v=>fmtUSD(v)},grid:GRID},y:{ticks:TICK,grid:{display:false}}}}
+});
+
+/* Bucket table */
+const bucketBody = document.querySelector('#tableBuckets tbody');
+B.forEach(b=>{
+  bucketBody.innerHTML += `<tr>
+    <td>${b.label}</td>
+    <td>${fmtUSD(b.capital)}</td>
+    <td>${fmtInt(b.nOrdenes)}</td>
+    <td>${fmtInt(b.cuotasTotales)}</td>
+    <td>${fmtInt(b.cuotasVigentes)}</td>
+    <td>${fmtInt(b.cuotasVencidas)}</td>
+    <td>${fmtPct(b.pctCapital)}</td>
+    <td>${fmtUSD(b.capitalAnterior)}</td>
+    <td>${b.varPct===null?'—':(b.varPct>=0?'+':'')+b.varPct.toFixed(1)+'%'}</td>
+    <td>${fmtUSD(b.montoVencido)}</td>
+    <td>${fmtPct(b.pctMontoVencido)}</td>
+  </tr>`;
+});
+const totalRow = {
+  capital:B.reduce((s,b)=>s+b.capital,0), nOrdenes:B.reduce((s,b)=>s+b.nOrdenes,0),
+  cuotasTotales:B.reduce((s,b)=>s+b.cuotasTotales,0), cuotasVigentes:B.reduce((s,b)=>s+b.cuotasVigentes,0),
+  cuotasVencidas:B.reduce((s,b)=>s+b.cuotasVencidas,0), montoVencido:B.reduce((s,b)=>s+b.montoVencido,0)
+};
+bucketBody.innerHTML += `<tr>
+  <td>Total cartera</td><td>${fmtUSD(totalRow.capital)}</td><td>${fmtInt(totalRow.nOrdenes)}</td>
+  <td>${fmtInt(totalRow.cuotasTotales)}</td><td>${fmtInt(totalRow.cuotasVigentes)}</td><td>${fmtInt(totalRow.cuotasVencidas)}</td>
+  <td>100%</td><td>—</td><td>—</td><td>${fmtUSD(totalRow.montoVencido)}</td><td>100%</td>
+</tr>`;
+
+/* 8. Cuotas vencidas charts */
+const CV = DATA.cuotasVencidas;
+new Chart(document.getElementById('chartCuotasVencidas'),{
+  type:'bar',
+  data:{
+    labels:CV.map(c=>c.label),
+    datasets:[{label:'N Órdenes',data:CV.map(c=>c.nOrdenes),backgroundColor:['rgba(107,114,144,0.4)','rgba(2,215,215,0.6)','rgba(200,133,10,0.6)','rgba(209,55,47,0.6)','rgba(122,31,26,0.7)'],borderColor:[MUTED,TEAL_DARK,AMBER,RED,'#7a1f1a'],borderWidth:1.5}]
+  },
+  options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' órdenes ('+CV[ctx.dataIndex].pctOrdenesMora+'%)'}}}}
+});
+new Chart(document.getElementById('chartCuotasVencidasMonto'),{
+  type:'bar',
+  data:{
+    labels:CV.map(c=>c.label),
+    datasets:[{label:'Monto vencido ($)',data:CV.map(c=>c.montoVencido),backgroundColor:['rgba(107,114,144,0.4)','rgba(2,215,215,0.6)','rgba(200,133,10,0.6)','rgba(209,55,47,0.6)','rgba(122,31,26,0.7)'],borderColor:[MUTED,TEAL_DARK,AMBER,RED,'#7a1f1a'],borderWidth:1.5}]
+  },
+  options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:false}},scales:{...baseOpts.scales,y:{ticks:{...TICK,callback:v=>fmtUSD(v)},grid:GRID}}}
+});
+
+/* Cuotas vencidas table */
+const cvBody = document.querySelector('#tableCuotasVencidas tbody');
+CV.forEach(c=>{
+  const gestPill = c.label.includes('4+')||c.label.includes('3 cuota') ? 'pill-red' : c.label.includes('2 cuota') ? 'pill-amber' : c.label.includes('1 cuota') ? 'pill-green' : 'pill-muted';
+  cvBody.innerHTML += `<tr>
+    <td>${c.label}</td>
+    <td>${fmtInt(c.nOrdenes)}</td>
+    <td>${fmtPct(c.pctOrdenesMora)}</td>
+    <td>${fmtUSD(c.capitalVencido)}</td>
+    <td>${fmtPct(c.pctCapitalVencido)}</td>
+    <td>${fmtInt(c.cuotasTotales)}</td>
+    <td>${fmtInt(c.cuotasVencidas)}</td>
+    <td>${fmtUSD(c.montoVencido)}</td>
+    <td>${fmtPct(c.pctMontoVencido)}</td>
+    <td><span class="pill ${gestPill}">${c.gestion}</span></td>
+  </tr>`;
+});
+const cvTotal = {
+  nOrdenes:CV.reduce((s,c)=>s+c.nOrdenes,0), capitalVencido:CV.reduce((s,c)=>s+c.capitalVencido,0),
+  cuotasTotales:CV.reduce((s,c)=>s+c.cuotasTotales,0), cuotasVencidas:CV.reduce((s,c)=>s+c.cuotasVencidas,0),
+  montoVencido:CV.reduce((s,c)=>s+c.montoVencido,0)
+};
+cvBody.innerHTML += `<tr>
+  <td>Total en mora</td><td>${fmtInt(cvTotal.nOrdenes)}</td><td>100%</td><td>${fmtUSD(cvTotal.capitalVencido)}</td><td>100%</td>
+  <td>${fmtInt(cvTotal.cuotasTotales)}</td><td>${fmtInt(cvTotal.cuotasVencidas)}</td><td>${fmtUSD(cvTotal.montoVencido)}</td><td>100%</td><td>—</td>
+</tr>`;
+
+/* Comparativo semanal table */
+const compBody = document.querySelector('#tableComparativo tbody');
+W.forEach(w=>{
+  compBody.innerHTML += `<tr>
+    <td>${w.semana}${w.oficial?'':' <span class="pill pill-amber" style="margin-left:4px">preliminar</span>'}</td>
+    <td>${fmtUSD(w.capVigente)}</td>
+    <td>${fmtUSD(w.capVencido)}</td>
+    <td>${w.imorCapital===null?'—':fmtPct(w.imorCapital)}</td>
+    <td>${fmtUSD(w.montoVencido)}</td>
+    <td>${fmtPct(w.imorOficial,2)}</td>
+    <td>${fmtInt(w.nOrdenes)}</td>
+    <td>${w.nOrdenesMora===null?'—':fmtInt(w.nOrdenesMora)}</td>
+    <td>${w.cuotasVencidas===null?'—':
