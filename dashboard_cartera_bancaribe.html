@@ -648,4 +648,11 @@ W.forEach(w=>{
     <td>${fmtPct(w.imorOficial,2)}</td>
     <td>${fmtInt(w.nOrdenes)}</td>
     <td>${w.nOrdenesMora===null?'—':fmtInt(w.nOrdenesMora)}</td>
-    <td>${w.cuotasVencidas===null?'—':
+    <td>${w.cuotasVencidas===null?'—':fmtInt(w.cuotasVencidas)}</td>
+    <td>${w.recuperacion===null?'—':fmtUSD(w.recuperacion)}</td>
+    <td>${w.varPct===null?'—':(w.varPct>=0?'+':'')+w.varPct.toFixed(1)+'%'}</td>
+  </tr>`;
+});
+</script>
+</body>
+</html>
