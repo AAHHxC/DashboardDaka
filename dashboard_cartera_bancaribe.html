@@ -129,7 +129,7 @@
     </div>
     <div class="cut-badges">
       <div class="badge badge-official" id="badgeOfficial">⚑ Oficial: 06 jul 2026</div>
-      <div class="badge badge-prelim" id="badgePrelim">● Preliminar: 17 jul 2026, 12:00 p.m.</div>
+      <div class="badge badge-prelim" id="badgePrelim">● Preliminar: 17 jul 2026, 10:12 p.m.</div>
     </div>
   </div>
 </div>
@@ -138,7 +138,7 @@
   <div class="insight-bar-inner">
     <span class="ic">📌</span>
     <div>
-      <strong>Lectura ejecutiva:</strong> el capital en mora se aceleró marcadamente desde el corte del 22/06 (Índice de Morosidad por capital pasó de ≈5.9% a 13.2% hacia el 29/06), coincidiendo con los sismos en Venezuela y el aumento de mora reportado por Riesgo a partir del 25/06. El IMOR oficial cede de 4.0% a 3.8% en el último corte auditado, pero el corte preliminar del 17/07 muestra una nueva alza a ≈4.3% — <strong>a vigilar en el próximo cierre semanal.</strong> El 93.8% del monto vencido sigue concentrado en mora joven (1–29 días): ventana de cobranza preventiva.
+      <strong>Lectura ejecutiva:</strong> el capital en mora se aceleró marcadamente desde el corte del 22/06 (Índice de Morosidad por capital pasó de ≈5.9% a 13.2% hacia el 29/06), coincidiendo con los sismos en Venezuela y el aumento de mora reportado por Riesgo a partir del 25/06. El IMOR oficial cede de 4.0% a 3.8% en el último corte auditado, pero el corte preliminar del 17/07 (actualizado 10:12 p.m.) muestra una nueva alza a ≈5.9% — <strong>a vigilar en el próximo cierre semanal.</strong> El 93.8% del monto vencido sigue concentrado en mora joven (1–29 días): ventana de cobranza preventiva.
     </div>
   </div>
 </div>
@@ -218,8 +218,8 @@
 
     <div class="kpi-card teal">
       <div class="kpi-label">Órdenes activas (preliminar, anoche)</div>
-      <div class="kpi-value" id="kpiOrdenesPrelim">21,014</div>
-      <div class="kpi-foot" id="kpiOrdenesPrelimFoot">Corte 17/07/2026 · sin auditar</div>
+      <div class="kpi-value" id="kpiOrdenesPrelim">21,877</div>
+      <div class="kpi-foot" id="kpiOrdenesPrelimFoot">Corte 17/07/2026, 10:12 p.m. · sin auditar</div>
     </div>
 
   </div>
@@ -380,7 +380,7 @@
     <div class="reco-card">
       <div class="reco-num">3</div>
       <h4>Investigar el salto del 22/06 al 29/06</h4>
-      <p>El Índice de Morosidad por capital saltó de ≈5.9% a 13.2% en una semana, coincidiendo con los sismos en Venezuela y el aumento de mora reportado por Riesgo desde el 25/06. Confirmar si el preliminar del 17/07 (≈4.3% IMOR oficial) indica una nueva aceleración o una normalización.</p>
+      <p>El Índice de Morosidad por capital saltó de ≈5.9% a 13.2% en una semana, coincidiendo con los sismos en Venezuela y el aumento de mora reportado por Riesgo desde el 25/06. Confirmar si el preliminar del 17/07 (≈5.9% IMOR oficial, actualizado 10:12 p.m.) indica una nueva aceleración o una normalización.</p>
     </div>
     <div class="reco-card">
       <div class="reco-num">4</div>
@@ -416,8 +416,8 @@
 const DATA = {
   meta: {
     officialCutLabel: "06 jul 2026",
-    prelimCutLabel: "17 jul 2026, 12:00 p.m.",
-    lastUpdated: "17 jul 2026, 12:47"
+    prelimCutLabel: "17 jul 2026, 10:12 p.m.",
+    lastUpdated: "17 jul 2026, 23:15"
   },
   weekly: [
     // Semana, CapVigente, CapVencido, ImorCapitalPct, MontoVencido, ImorOficialPct, NOrdenes, NOrdenesMora, CuotasVencidas, Recuperacion, VarPctCapVencido, oficial(bool)
@@ -431,7 +431,7 @@ const DATA = {
     {semana:"22 jun", capVigente:1270352,   capVencido:78963,   imorCapital:5.9,  montoVencido:22601,  imorOficial:1.7, nOrdenes:11755, nOrdenesMora:721,  cuotasVencidas:1026, recuperacion:833,  varPct:15.3,   oficial:true},
     {semana:"29 jun", capVigente:1315494,   capVencido:200373,  imorCapital:13.2, montoVencido:60118,  imorOficial:4.0, nOrdenes:13238, nOrdenesMora:1805, cuotasVencidas:2325, recuperacion:1753, varPct:153.8,  oficial:true},
     {semana:"06 jul", capVigente:1678109,   capVencido:219451,  imorCapital:11.6, montoVencido:72339,  imorOficial:3.8, nOrdenes:16637, nOrdenesMora:1973, cuotasVencidas:2839, recuperacion:821,  varPct:9.5,    oficial:true},
-    {semana:"17 jul*",capVigente:null,      capVencido:null,    imorCapital:null, montoVencido:101819, imorOficial:4.3, nOrdenes:21014, nOrdenesMora:null, cuotasVencidas:null, recuperacion:null, varPct:null,   oficial:false}
+    {semana:"17 jul*",capVigente:null,      capVencido:null,    imorCapital:null, montoVencido:102050, imorOficial:5.86, nOrdenes:21877, nOrdenesMora:null, cuotasVencidas:null, recuperacion:null, varPct:null,   oficial:false}
   ],
   buckets: [
     {label:"Vigente (0 días)", capital:1678109, nOrdenes:14664, cuotasTotales:58656, cuotasVigentes:58191, cuotasVencidas:465, pctCapital:88.4, capitalAnterior:1315494, varPct:27.6, montoVencido:0,     pctMontoVencido:0.0},
